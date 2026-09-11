@@ -210,7 +210,13 @@ command line arguments:
 ```go
 	flag.StringVar(&rootArgs.server.KeyFile, "key-file", "/certs/key.pem", "--key-file /certs/key.pem")
 	flag.StringVar(&rootArgs.server.CertFile, "cert-file", "/certs/cert.pem", "--cert-file /certs/cert.pem")
+	flag.StringVar(&rootArgs.server.TLSCiphers, "tls-ciphers", "", "comma separated list of tls ciphers allowed for the server")
+	flag.StringVar(&rootArgs.server.TLSMinVersion, "tls-min-version", "", "minimum version of TLS supported for the server. Valid values: 1.0, 1.1, 1.2, 1.3")
+	flag.StringSliceVar(&rootArgs.server.TLSCurvePreferences, "tls-curve-preferences", nil, "ordered list of TLS key exchange curves for the server")
+	flag.BoolVar(&rootArgs.enableHTTP2, "enable-http2", true, "Enable HTTP/2 for the server")
 ```
+
+These TLS profile flags configure the bitwarden-sdk-server's TLS settings. When unset, standard Go default TLS configurations apply. HTTP/2 remains enabled by default unless `--enable-http2=false` is explicitly set. Corresponding Helm chart values are `tlsProfile.minVersion`, `tlsProfile.ciphers`, `tlsProfile.curvePreferences`, and `enableHTTP2`.
 
 The certificate mount target and values are defined under `image` section in the values file as such:
 

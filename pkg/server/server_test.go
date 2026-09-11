@@ -651,3 +651,21 @@ func unusableStatePath(t *testing.T) string {
 
 	return filepath.Join(notADir, ".bitwarden-state")
 }
+
+func TestShutdown(t *testing.T) {
+	tests := []struct {
+		name string
+		srv  *Server
+	}{
+		{
+			name: "http.Server is nil",
+			srv:  NewServer(Config{}),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.NoError(t, tt.srv.Shutdown(context.Background()))
+		})
+	}
+}

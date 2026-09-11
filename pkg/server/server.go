@@ -35,11 +35,15 @@ const (
 )
 
 type Config struct {
-	Insecure bool
-	Debug    bool
-	Addr     string
-	KeyFile  string
-	CertFile string
+	Insecure            bool
+	Debug               bool
+	Addr                string
+	KeyFile             string
+	CertFile            string
+	TLSCiphers          string
+	TLSMinVersion       string
+	TLSCurvePreferences []string
+	DisableHTTP2        bool
 	// StatePath is the file the BitWarden SDK persists its session into.
 	// Empty disables persistence and re-authenticates on every request.
 	StatePath string
@@ -88,7 +92,17 @@ func (s *Server) Run(_ context.Context) error {
 
 	r.Mount(api, warden)
 
-	srv := &http.Server{Addr: s.Addr, Handler: r, ReadTimeout: 5 * time.Second}
+	tlsCfg, err := s.TLSConfig()
+	if err != nil {
+		return err
+	}
+
+	srv := &http.Server{Addr: s.Addr, Handler: r, ReadTimeout: 5 * time.Second, TLSConfig: tlsCfg}
+	if tlsCfg != nil && s.DisableHTTP2 {
+		p := new(http.Protocols)
+		p.SetHTTP1(true)
+		srv.Protocols = p
+	}
 	s.server = srv
 
 	if s.Insecure {
@@ -124,6 +138,10 @@ func (s *Server) resolveStatePath() (string, error) {
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
+	if s.server == nil {
+		return nil
+	}
+
 	return s.server.Shutdown(ctx)
 }
 
